@@ -1,0 +1,122 @@
+## §7##########################################################################
+##
+## §7                              nwPlayerProfile
+## §7   Created By Discord NN#7999
+## §7   https://www.spigotmc.org/members/newza12346.399384/
+##
+## §7##########################################################################
+
+gui:
+  name: "Cosmetic Inventory"
+  rows: 4
+
+message:
+  msg-reload: '&aรีโหลดปลักอินเสร็จละจ้า!'
+  msg-not-found-user: '&cไม่พบข้อมูลของผู้เล่นนี้!'
+#  msg-open-gui-user: '&aเปิดเมนูเครื่องประดับ!'
+
+setting:
+  permission: newworld.playerprofile.reload
+
+icons:
+  # Cosmetic / Player Armor Set Zone อย่าลบเดะหายแก้ได้อย่างเดียว ตรง material และ custommodeldata คือกรณีัที่ผู้เล่นไม่ได้สวมแล้วจะโชว์อะไรแทน
+  helmet:
+    slot: 0
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  chestplate:
+    slot: 9
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  leggings:
+    slot: 18
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  boots:
+    slot: 27
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  offhand:
+    slot: 29
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  backpack:
+    slot: 30
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  balloon:
+    slot: 31
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  player-helmet:
+    slot: 1
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  player-chestplate:
+    slot: 10
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  player-leggings:
+    slot: 19
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  player-boots:
+    slot: 28
+    display: '&f'
+    material: SUGAR
+    custom_model_data: 1
+  # End
+  item:
+    #แต่งช่องได้ตามใจชอบเลยจ้า คิดชื่อเองได้เลย กรณีไม่ใส่ lore และ actions ให้ใช้ []
+    player-head:
+      display: '&e'
+      material: PLAYER_HEAD
+      custom_model_data: 10006
+      slot: 3-4 #ถ้าอยากใส่มากกว่า 1 ช่องให้ใช้แบบนี้
+      lore: []
+      actions: []
+    party-invite:
+      display: '&eเชิญเข้าปาร์ตี้'
+      material: GOLD_INGOT
+      custom_model_data: 1
+      slot: 32
+      lore:
+        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+      actions:
+        - partytest invite %player%
+    trade-invite:
+      display: '&eขอแลกเปลี่ยน'
+      material: COAL
+      custom_model_data: 1
+      slot: 33
+      lore:
+        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+      actions:
+        - partytest invite %player%
+    guild-invite:
+      display: '&eเชิญเข้ากิล'
+      material: DIAMOND
+      custom_model_data: 1
+      slot: 34
+      lore:
+        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+      actions:
+        - partytest invite %player%
+    #ห้ามลบมันคือตัวใส่ไอเท็มที่เป็นช่องว่างไม่ให้เหลือช่องว่าง
+    no-fill:
+      display: '&f'
+      material: PAPER
+      custom_model_data: 1173
+      lore: []
+      actions: []
+

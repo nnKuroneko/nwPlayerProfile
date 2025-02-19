@@ -1,0 +1,14 @@
+name: nwPlayerProfile
+version: '1.0-SNAPSHOT'
+main: com.nwPlayerProfile.NwPlayerProfile
+api-version: '1.21'
+load: STARTUP
+description: nwPlayerProfile
+author: Discord NN#7999
+depend: [ HMCCosmetics ]
+commands:
+  nwPlayerProfile:
+    description: NW Player Profile Command
+    usage: /<command>
+    aliases:
+      - nw
