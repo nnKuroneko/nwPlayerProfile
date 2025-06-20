@@ -1,122 +1,161 @@
 ## §7##########################################################################
 ##
 ## §7                              nwPlayerProfile
-## §7   Created By Discord NN#7999
+##      Created By Discord NN#7999 (Newworld Server)
 ## §7   https://www.spigotmc.org/members/newza12346.399384/
+##
+##      Warning: If sold, you've been scammed. It's free!
+##      Supports Minimessage Only.
+##      1.Standard = <white/>
+##      https://www.birdflop.com/resources/rgb/
 ##
 ## §7##########################################################################
 
+#Contact&Support: https://discord.gg/gwXcr7c6Gq
+
 gui:
-  name: "Cosmetic Inventory"
-  rows: 4
+  name: "<shift:-28><glyph:nw_menu_5x5_profile_2> {groups}"
+  rows: 5
 
 message:
-  msg-reload: '&aรีโหลดปลักอินเสร็จละจ้า!'
-  msg-not-found-user: '&cไม่พบข้อมูลของผู้เล่นนี้!'
-#  msg-open-gui-user: '&aเปิดเมนูเครื่องประดับ!'
+  msg-reload: <red>Plugin reloaded successfully!<red/>
+  msg-not-found-user: <red>Not Found PLayer!<red/>
+#  msg-open-gui-user: '<red>!'
+
+
+# placeholder only in title: {groups}
+# Generate Rank Prefix: https://itemsadder.github.io/minecraft-rank-generator/
+groups:
+  default: '%nexo_newbie_tag_playerprofile%'
+  newbie: '%nexo_newbie%'
+  member: <glyph:member>
+  adventure: '%nexo_adventure_tag_playerprofile%'
+
 
 setting:
+  rightplayer: true
   permission: newworld.playerprofile.reload
+  open: newworld.playerprofile.open
 
 icons:
-  # Cosmetic / Player Armor Set Zone อย่าลบเดะหายแก้ได้อย่างเดียว ตรง material และ custommodeldata คือกรณีัที่ผู้เล่นไม่ได้สวมแล้วจะโชว์อะไรแทน
+  #HMCCosmetic DisplayItem
+  #(You can leave a comment if you don't use it.)
   helmet:
     slot: 0
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   chestplate:
     slot: 9
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   leggings:
     slot: 18
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   boots:
     slot: 27
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   offhand:
     slot: 29
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   backpack:
     slot: 30
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   balloon:
     slot: 31
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
+
+  #Player DisplayItem
+  #(You can leave a comment if you don't use it.)
   player-helmet:
     slot: 1
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   player-chestplate:
     slot: 10
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   player-leggings:
     slot: 19
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
   player-boots:
     slot: 28
-    display: '&f'
+    display: '<white/>'
     material: SUGAR
     custom_model_data: 1
-  # End
+
+    # Support PlaceholderAPI
+    # In Action Use %player%
+
+    # Custom DisplayItem
   item:
-    #แต่งช่องได้ตามใจชอบเลยจ้า คิดชื่อเองได้เลย กรณีไม่ใส่ lore และ actions ให้ใช้ []
+    # You can add customitems like this.
+    #    test:
+    #      display: '<white/>'
+    #      material: PLAYER_HEAD
+    #      custom_model_data: 10006
+    #      slot: 52
+    #      lore: [ ]
+    #      actions: [ ]
     player-head:
-      display: '&e'
+      display: '<white/>'
       material: PLAYER_HEAD
       custom_model_data: 10006
-      slot: 3-4 #ถ้าอยากใส่มากกว่า 1 ช่องให้ใช้แบบนี้
+      slot: 3
       lore: []
       actions: []
     party-invite:
-      display: '&eเชิญเข้าปาร์ตี้'
+      display: '<white>Party Invite</white>'
       material: GOLD_INGOT
       custom_model_data: 1
       slot: 32
       lore:
-        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+        - 'Lore1'
+        - 'Lore2'
       actions:
-        - partytest invite %player%
+        - party invite %player%
+        - say Hello
     trade-invite:
-      display: '&eขอแลกเปลี่ยน'
+      display: '<white>Trade Invite</white>'
       material: COAL
       custom_model_data: 1
       slot: 33
       lore:
-        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+        - 'Lore1'
+        - 'Lore2'
       actions:
-        - partytest invite %player%
+        - trade %player%
+        - kick %player%
     guild-invite:
-      display: '&eเชิญเข้ากิล'
+      display: '<white>Guild INvite</white>'
       material: DIAMOND
       custom_model_data: 1
       slot: 34
       lore:
-        - '&7เชิญผู้เล่นเข้าปาร์ตี้'
+        - 'Lore1'
+        - 'Lore2'
       actions:
-        - partytest invite %player%
+        - guild invite %player%
     #ห้ามลบมันคือตัวใส่ไอเท็มที่เป็นช่องว่างไม่ให้เหลือช่องว่าง
+    #Cannot be deleted but can be edited
     no-fill:
-      display: '&f'
+      display: '<white/>'
       material: PAPER
       custom_model_data: 1173
-      lore: []
       actions: []
 

@@ -1,14 +1,19 @@
 name: nwPlayerProfile
-version: '1.0-SNAPSHOT'
+version: '1.4.2-FREE'
 main: com.nwPlayerProfile.NwPlayerProfile
 api-version: '1.21'
 load: STARTUP
 description: nwPlayerProfile
 author: Discord NN#7999
 depend: [ HMCCosmetics ]
+softdepend:
+  - luckPerms
+  - Placeholders
+  - Citizens
+  - Nexo
+  - ItemsAdder
 commands:
   nwPlayerProfile:
-    description: NW Player Profile Command
-    usage: /<command>
-    aliases:
-      - nw
+    description: Base command for NwPlayerProfile.
+    usage: /nwPlayerProfile <reload>
+    aliases: [ nwpp,profile ]

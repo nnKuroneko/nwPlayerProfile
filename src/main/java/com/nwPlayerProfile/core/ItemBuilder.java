@@ -1,17 +1,30 @@
 package com.nwPlayerProfile.core;
 
 import com.nwPlayerProfile.NwPlayerProfile;
+import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ItemBuilder {
     private final ItemStack item;
 
     public ItemBuilder() {
         this.item = new ItemStack(Material.AIR); // Default to AIR
+    }
+
+    public ItemBuilder(ItemStack baseItem) { // Constructor ใหม่: สร้าง ItemBuilder ด้วย ItemStack ตั้งต้น
+        if (baseItem == null) {
+            this.item = new ItemStack(Material.AIR); // ป้องกัน NullPointerException หาก baseItem เป็น null
+        } else {
+            this.item = baseItem.clone(); // Clone เพื่อป้องกันการแก้ไข ItemStack ต้นฉบับโดยตรง
+        }
     }
 
     public ItemBuilder setMaterial(Material material) {
@@ -40,6 +53,8 @@ public class ItemBuilder {
         }
         return this;
     }
+
+
 
     public ItemBuilder setLore(List<String> lore) {
         ItemMeta meta = item.getItemMeta();

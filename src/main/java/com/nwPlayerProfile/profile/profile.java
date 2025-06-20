@@ -13,8 +13,11 @@ import com.nwPlayerProfile.inventory.InventoryStage;
 import dev.triumphteam.gui.components.GuiType;
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.GuiItem;
-import net.citizensnpcs.api.CitizensAPI;
+import com.nwPlayerProfile.hooks.CitizensAPI;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -22,6 +25,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +39,24 @@ import static com.nwPlayerProfile.core.Utils.*;
 public class profile implements Listener {
 
     private static final HashMap<UUID, UUID> guiOwners = new HashMap<>();
-
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacySection();
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEntityEvent event) {
-        if (!(event.getRightClicked() instanceof Player) || CitizensAPI.getNPCRegistry().isNPC(event.getRightClicked())) {
-            return;  // ถ้าเป็น NPC หรือไม่ใช่ Player ก็จะไม่ทำอะไรต่อ
+        // ตรวจสอบก่อนว่า entity ที่คลิกเป็น Player หรือไม่
+        if (!(event.getRightClicked() instanceof Player)) {
+            return;
+        }
+
+        if (!isRightPlayer){
+            return;
+        }
+
+        // *** แก้ไขการตรวจสอบ Citizens NPC ตรงนี้ ***
+        // ตรวจสอบว่า Citizens ถูกเปิดใช้งานอยู่หรือไม่ และเป็น NPC หรือไม่
+        if (CitizensAPI.isCitizensEnabled() && CitizensAPI.isNPC(event.getRightClicked())) {
+            return; // ถ้าเป็น NPC ก็จะไม่ทำอะไรต่อ
         }
 
         Player target = (Player) event.getRightClicked();
@@ -49,11 +65,7 @@ public class profile implements Listener {
         }
 
         Player player = event.getPlayer();
-        UUID targetUUID = target.getUniqueId();
-
         openMenu(player , target);
-
-
     }
 
 
@@ -63,17 +75,18 @@ public class profile implements Listener {
         // ดึงข้อมูลของ CosmeticUser
         CosmeticUser cosmeticUser = HMCCosmeticsAPI.getUser(targetUUID);
         if (cosmeticUser == null) {
-            player.sendMessage(ColorUtils.translateColorCodes(MsgNotFoundUser));
+            //player.sendMessage(ColorUtils.translateColorCodes(MsgNotFoundUser));
             InventoryManager.removeStage(player);
             return;
         }
-
         // อัพเดทชุดเกราะที่ผู้เล่นใส่
         Utils.updateArmorSet(target.getInventory());
+        //String guiTitle = Utils.Name.replace("{groups}", Utils.getPlayerGroupPlaceholder(target));
+        String finalGuiTitle = Utils.getParsedGuiTitle(target);
 
         // สร้าง GUI
         Gui gui = Gui.gui()
-                .title(Component.text(ColorUtils.translateColorCodes(Name)))
+                .title((MINI_MESSAGE.deserialize(finalGuiTitle)))
                 .rows(Rows)
                 .type(GuiType.CHEST)
                 .create();
@@ -87,10 +100,13 @@ public class profile implements Listener {
 
                 if (target != null) {
                     for (String action : actions) {
-                        player.performCommand(action.replace("%player%", target.getName()));
+                        // แปลง placeholder ใน action ด้วย PlaceholderAPI
+                        String parsedAction = PlaceholderAPI.setPlaceholders(target, action);
+                        player.performCommand(parsedAction);
                     }
                 }
             }
+
         });
 
         gui.setOpenGuiAction(event -> {
@@ -111,10 +127,31 @@ public class profile implements Listener {
         });
 
         // ใส่ชุดเกราะที่ผู้เล่นใส่ในแต่ละส่วนลงใน GUI
-        GuiItem helmetItem = ItemBuilder.from(Utils.getArmor("helmet")).asGuiItem();
-        GuiItem chestplateItem = ItemBuilder.from(Utils.getArmor("chestplate")).asGuiItem();
-        GuiItem leggingsItem = ItemBuilder.from(Utils.getArmor("leggings")).asGuiItem();
-        GuiItem bootsItem = ItemBuilder.from(Utils.getArmor("boots")).asGuiItem();
+        GuiItem helmetItem = ItemBuilder.from(Utils.getArmor("helmet"))
+                .name(MINI_MESSAGE.deserialize(
+                        NwPlayerProfile.getPlugin(NwPlayerProfile.class)
+                                .getConfig().getString("icons.player-helmet.display", "")
+                )).flags(ItemFlag.HIDE_ATTRIBUTES)
+                .asGuiItem();
+        GuiItem chestplateItem = ItemBuilder.from(Utils.getArmor("chestplate"))
+                .name(MINI_MESSAGE.deserialize(
+                        NwPlayerProfile.getPlugin(NwPlayerProfile.class)
+                                .getConfig().getString("icons.player-chestplate.display", "")
+                )).flags(ItemFlag.HIDE_ATTRIBUTES)
+                .asGuiItem();
+        GuiItem leggingsItem = ItemBuilder.from(Utils.getArmor("leggings"))
+                .name(MINI_MESSAGE.deserialize(
+                        NwPlayerProfile.getPlugin(NwPlayerProfile.class)
+                                .getConfig().getString("icons.player-leggings.display", "")
+                )).flags(ItemFlag.HIDE_ATTRIBUTES)
+                .asGuiItem();
+        GuiItem bootsItem = ItemBuilder.from(Utils.getArmor("boots"))
+                .name(MINI_MESSAGE.deserialize(
+                        NwPlayerProfile.getPlugin(NwPlayerProfile.class)
+                                .getConfig().getString("icons.player-boots.display", "")
+                )).flags(ItemFlag.HIDE_ATTRIBUTES)
+                .asGuiItem();
+
         gui.setItem(Utils.getArmorSlot("helmet"), helmetItem);
         gui.setItem(Utils.getArmorSlot("chestplate"), chestplateItem);
         gui.setItem(Utils.getArmorSlot("leggings"), leggingsItem);
@@ -140,33 +177,69 @@ public class profile implements Listener {
             if (item == null) {
                 String slotName = slotType.toString().toLowerCase();
                 item = Utils.setFromConfig(NwPlayerProfile.getPlugin(NwPlayerProfile.class), "icons." + slotName).build();
+
             }
 
             // แปลง ItemStack เป็น GuiItem ของ Triumph GUI
-            GuiItem guiItem = ItemBuilder.from(item).asGuiItem();
+            GuiItem guiItem = ItemBuilder.from(item).flags(ItemFlag.HIDE_ATTRIBUTES).asGuiItem();
             gui.setItem(slotIndex, guiItem);
         }
 
         // ใส่ไอเทมทั้งหมดที่กำหนดใน config ลงใน GUI
         synchronized(CustomItems) {
             for (Map.Entry<Integer, CustomGUIItem> entry : Utils.CustomItems.entrySet()) {
-                ItemStack item = entry.getValue().getItem(); // ดึง ItemStack ออกจาก CustomGUIItem
-                GuiItem guiItem = ItemBuilder.from(item).asGuiItem();
+                ItemStack baseItem = entry.getValue().getItem().clone(); // สำคัญ: Clone ItemStack ก่อนแก้ไข
+                ItemStack finalItem = baseItem;
+
+                if (baseItem.getItemMeta() != null) {
+                    finalItem = Utils.setLorePlaceholder(baseItem, target); // ส่ง UUID
+                }
+
+                if (baseItem.getType() == Material.PLAYER_HEAD) {
+                    finalItem = Utils.setPlayerHeadSkin(baseItem, target); // ส่ง UUID
+                }
+
+                GuiItem guiItem = ItemBuilder.from(finalItem).flags(ItemFlag.HIDE_ATTRIBUTES).asGuiItem();
                 gui.setItem(entry.getKey(), guiItem);
             }
         }
 
         // ใช้ค่าจาก config สำหรับ "no-fill"
-        ItemStack itemFill = new com.nwPlayerProfile.core.ItemBuilder()
-                .setMaterial(Utils.NoFillMaterial)
-                .setDisplayName(ColorUtils.translateColorCodes(Utils.NoFillDisplay))
-                .setCustomModelData(Utils.NoFillCustomModelData)
-                .setLore(ColorUtils.translateColorCodes(Utils.NoFillLore))
-                .hideAttribute()
-                .build();
 
-        GuiItem fillerItem = ItemBuilder.from(itemFill).asGuiItem();
-        gui.getFiller().fill(fillerItem);
+        String noFillMaterialName = NwPlayerProfile.getPlugin(NwPlayerProfile.class)
+                .getConfig().getString("icons.item.no-fill.material", "SUGAR");
+
+// ดึง ItemStack จากชื่อ material โดยตรง
+        ItemStack fillerItemStack = getItemStackFromString(noFillMaterialName, "icons.item.no-fill.material");
+
+// สร้าง ItemBuilder
+        dev.triumphteam.gui.builder.item.ItemBuilder itemBuilder = ItemBuilder.from(fillerItemStack)
+                .name(MINI_MESSAGE.deserialize(Utils.NoFillDisplay != null ? Utils.NoFillDisplay : ""))
+                .flags(ItemFlag.HIDE_ATTRIBUTES);
+
+// ตรวจสอบว่าเป็นไอเทมจาก Nexo หรือไม่
+        boolean isCustomItem = false;
+        if (nexoHooks != null && nexoHooks.isNexoEnabled()) {
+            ItemStack nexoItem = nexoHooks.getItemId(noFillMaterialName);
+            isCustomItem = (nexoItem != null && nexoItem.getType() == fillerItemStack.getType());
+
+            // Debug log
+        }
+
+        if (itemsAdderHooks != null && itemsAdderHooks.isItemsAdderHooked()) {
+            ItemStack iaItem = itemsAdderHooks.getItemId(noFillMaterialName);
+            isCustomItem = (iaItem != null && iaItem.getType() == fillerItemStack.getType());
+
+            // Debug log
+        }
+
+// ตั้งค่า custom model data ถ้าไม่ใช่ไอเทมจาก Nexo
+        if (Utils.NoFillCustomModelData > 0 && !isCustomItem) {
+            itemBuilder.model(Utils.NoFillCustomModelData);
+        }
+
+// เติมลง GUI
+        gui.getFiller().fill(itemBuilder.asGuiItem());
 
 
         // เปิด GUI

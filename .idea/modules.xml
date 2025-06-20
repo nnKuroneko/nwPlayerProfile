@@ -2,8 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.nwPlayerProfile.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.nwPlayerProfile.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.nwPlayerProfile.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.test.iml" />
     </modules>
   </component>
 </project>

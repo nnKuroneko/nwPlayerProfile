@@ -5,10 +5,11 @@ plugins {
 
 shadowJar {
     relocate("dev.triumphteam.gui", "com.nwPlayerProfile.profile.gui")
+    relocate 'org.bstats', 'com.nwPlayerProfile.metrics'
 }
 
 group = 'com'
-version = '1.0-SNAPSHOT'
+version = '1.4.2-FREE'
 
 repositories {
     mavenCentral()
@@ -30,17 +31,9 @@ repositories {
         url = uri("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     }
 
-    // MythicMobs
-    maven {
-        url = uri("https://mvn.lumine.io/repository/maven-public")
-        metadataSources {
-            artifact()
-        }
-    }
 
-    // PlayerAnimator
     maven {
-        url = uri("https://mvn.lumine.io/repository/maven/")
+        url = "https://jitpack.io/"
     }
 
     // Triumph GUI
@@ -54,11 +47,24 @@ repositories {
     }
 
     maven {
+        url 'https://repo.bstats.org/content/repositories/releases/'
+    }
+
+    maven {
         name = 'citizens-repo'
         url = 'https://maven.citizensnpcs.co/repo'
     }
+
+    maven {
+        url = 'https://repo.extendedclip.com/releases/'
+    }
+
+    maven {
+        url = "https://repo.nexomc.com/releases"
+    }
 }
 
+//25933 Bstats
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.1-R0.1-SNAPSHOT")
     compileOnly("com.hibiscusmc:HMCCosmetics:2.7.5-b516cfce")
@@ -66,13 +72,22 @@ dependencies {
     implementation("dev.triumphteam:triumph-gui:3.1.12-SNAPSHOT") {
         exclude group: 'net.kyori'  // Exclude the entire net.kyori group
     }
-    implementation("com.owen1212055:particlehelper:1.0.0-SNAPSHOT")
-    implementation("com.ticxo.playeranimator:PlayerAnimator:R1.2.8")
     implementation("net.kyori:adventure-api:4.19.0")
+    implementation "net.kyori:adventure-platform-bukkit:4.3.4"
+    implementation("net.kyori:adventure-text-minimessage:4.20.0")
+//    implementation("com.owen1212055:particlehelper:1.0.0-SNAPSHOT")
+//    implementation("com.ticxo.playeranimator:PlayerAnimator:R1.2.8")
+    implementation("net.kyori:adventure-api:4.19.0")
+    implementation 'org.bstats:bstats-bukkit:3.0.2'
+    compileOnly("com.nexomc:nexo:1.2.0")
+    compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.3-beta-14")
+//    compileOnly("com.github.LoneDev6:itemsadder-api:3.6.1")
+//    compileOnly("com.github.LoneDev6:API-ItemsAdder:3.6.1")
     compileOnly("net.luckperms:api:5.4")
     compileOnly('net.citizensnpcs:citizens-main:2.0.35-SNAPSHOT') {
         exclude group: '*', module: '*'
     }
+    compileOnly 'me.clip:placeholderapi:2.11.6'
 
 }
 
