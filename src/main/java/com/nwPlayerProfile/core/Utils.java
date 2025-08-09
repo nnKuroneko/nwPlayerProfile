@@ -2,12 +2,13 @@ package com.nwPlayerProfile.core;
 
 import com.nwPlayerProfile.NwPlayerProfile;
 import com.hibiscusmc.hmccosmetics.cosmetic.CosmeticSlot;
+import com.nwPlayerProfile.database.BadgeData;
+import com.nwPlayerProfile.database.DatabaseManager;
 import com.nwPlayerProfile.hooks.ItemsAdderHooks;
 import com.nwPlayerProfile.hooks.LuckpermsHooks;
 import com.nwPlayerProfile.hooks.NexoHooks;
+import com.nwPlayerProfile.profile.BadgeManager;
 import me.clip.placeholderapi.PlaceholderAPI;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -18,11 +19,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerProfile;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
+
 
 public class Utils {
 
@@ -44,6 +43,7 @@ public class Utils {
     public static int NoFillCustomModelData;
     public static List<String> NoFillLore;
     public static String[] NoFillActions;
+    public static String ActionType;
 
     public static NexoHooks nexoHooks;
     public static ItemsAdderHooks itemsAdderHooks;
@@ -51,12 +51,18 @@ public class Utils {
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.legacySection();
 
+    public static BadgeManager badgeManager; // Declare it static here
+    private static final Map<UUID, Map<String, String>> selectedPlayerBadges = new HashMap<>();
+
 
     static {
         // โหลดค่า Name และ Row จาก config.yml
         NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        DatabaseManager dbManager = plugin.getDatabaseManager();
         Utils.nexoHooks = new NexoHooks(plugin); // Initialized NexoHooks ที่นี่
+        Utils.badgeManager = new BadgeManager(plugin, dbManager);
 
+        ActionType = plugin.getConfig().getString("setting.action", "RIGHT_CLICK").toUpperCase();
         Utils.Name = plugin.getConfig().getString("gui.name");
         Utils.MsgReload = plugin.getConfig().getString("message.msg-reload");
         Utils.isRightPlayer = plugin.getConfig().getBoolean("setting.rightplayer",true);
@@ -119,9 +125,9 @@ public class Utils {
 
         // 2. Now, pass the *entire* rawTitle through PlaceholderAPI for any other placeholders
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && player != null) {
-            return PlaceholderAPI.setPlaceholders(player, rawTitle);
+            return ColorUtils.translateColorCodes(rawTitle, player);
         } else {
-            return rawTitle; // Return as is if PlaceholderAPI is not enabled
+            return ColorUtils.translateColorCodes(rawTitle, player); // Return as is if PlaceholderAPI is not enabled
         }
     }
 
@@ -142,41 +148,104 @@ public class Utils {
         return SlotMap.getOrDefault(slotType, -1); // คืนค่า -1 ถ้าไม่มีข้อมูล
     }
 
-    // ฟังก์ชั่นดึงชุดเกราะจากผู้เล่น
-    public static void updateArmorSet(PlayerInventory inventory) {
+    public static Map<String, ItemStack> getPlayerEquipmentFromMySQL(UUID playerUUID) {
         NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        DatabaseManager db = plugin.getDatabaseManager();
+        Map<String, ItemStack> equipment = new HashMap<>();
 
-        // ใช้ getItemStackFromString แทน setFromConfig เพื่อให้ดึงจาก Nexo ได้
-        ItemStack helmet = inventory.getHelmet();
-        if (helmet == null) {
-            String materialName = plugin.getConfig().getString("icons.player-helmet.material");
-            helmet = getItemStackFromString(materialName, "icons.player-helmet.material");
-        }
-        armorSet.put("helmet", helmet);
+        if (db.isMySQLEnabled()) {
+            Map<String, String> eqMap = db.getPlayerEquipment(playerUUID);
 
-        // ทำแบบเดียวกันกับ armor อื่นๆ
-        ItemStack chestplate = inventory.getChestplate();
-        if (chestplate == null) {
-            String materialName = plugin.getConfig().getString("icons.player-chestplate.material");
-            chestplate = getItemStackFromString(materialName, "icons.player-chestplate.material");
+            if (eqMap != null && !eqMap.isEmpty()) {
+                equipment.put("helmet", getItemStackFromString(eqMap.get("helmet"), "equipment.helmet"));
+                equipment.put("chestplate", getItemStackFromString(eqMap.get("chestplate"), "equipment.chestplate"));
+                equipment.put("leggings", getItemStackFromString(eqMap.get("leggings"), "equipment.leggings"));
+                equipment.put("boots", getItemStackFromString(eqMap.get("boots"), "equipment.boots"));
+            }
         }
-        armorSet.put("chestplate", chestplate);
 
-        ItemStack leggings = inventory.getLeggings();
-        if (leggings == null) {
-            String materialName = plugin.getConfig().getString("icons.player-leggings.material");
-            leggings = getItemStackFromString(materialName, "icons.player-leggings.material");
-        }
-        armorSet.put("leggings", leggings);
-
-        ItemStack boots = inventory.getBoots();
-        if (boots == null) {
-            String materialName = plugin.getConfig().getString("icons.player-boots.material");
-            boots = getItemStackFromString(materialName, "icons.player-boots.material");
-        }
-        armorSet.put("boots", boots);
+        return equipment;
     }
 
+    // เพิ่มเมธอดสำหรับดึงข้อมูล Cosmetic จาก MySQL
+    public static Map<CosmeticSlot, ItemStack> getPlayerCosmeticsFromMySQL(UUID playerUUID) {
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        DatabaseManager db = plugin.getDatabaseManager();
+        Map<CosmeticSlot, ItemStack> cosmetics = new HashMap<>();
+
+        if (db.isMySQLEnabled()) {
+            Map<String, String> cosMap = db.getPlayerCosmetics(playerUUID);
+
+            if (cosMap != null && !cosMap.isEmpty()) {
+                for (Map.Entry<String, String> entry : cosMap.entrySet()) {
+                    try {
+                        CosmeticSlot slot = CosmeticSlot.valueOf(entry.getKey().toUpperCase());
+                        ItemStack item = getItemStackFromString(entry.getValue(), "cosmetic." + entry.getKey());
+                        cosmetics.put(slot, item);
+                    } catch (IllegalArgumentException e) {
+                        plugin.getLogger().warning("Invalid cosmetic slot in database: " + entry.getKey());
+                    }
+                }
+            }
+        }
+
+        return cosmetics;
+    }
+
+    // แก้ไขเมธอด updateArmorSet เพื่อรองรับข้อมูลจาก MySQL
+    public static void updateArmorSet(PlayerInventory inventory, Map<String, ItemStack> mysqlEquipment) {
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+
+        // ใช้ข้อมูลจาก MySQL ถ้ามี
+        if (mysqlEquipment != null && !mysqlEquipment.isEmpty()) {
+            armorSet.put("helmet", mysqlEquipment.getOrDefault("helmet",
+                    getItemStackFromString(plugin.getConfig().getString("icons.player-helmet.material"),
+                            "icons.player-helmet.material")));
+
+            armorSet.put("chestplate", mysqlEquipment.getOrDefault("chestplate",
+                    getItemStackFromString(plugin.getConfig().getString("icons.player-chestplate.material"),
+                            "icons.player-chestplate.material")));
+
+            armorSet.put("leggings", mysqlEquipment.getOrDefault("leggings",
+                    getItemStackFromString(plugin.getConfig().getString("icons.player-leggings.material"),
+                            "icons.player-leggings.material")));
+
+            armorSet.put("boots", mysqlEquipment.getOrDefault("boots",
+                    getItemStackFromString(plugin.getConfig().getString("icons.player-boots.material"),
+                            "icons.player-boots.material")));
+        } else {
+            // ใช้ข้อมูลจาก inventory ถ้าไม่มีข้อมูลจาก MySQL
+            ItemStack helmet = inventory.getHelmet();
+            if (helmet == null) {
+                String materialName = plugin.getConfig().getString("icons.player-helmet.material");
+                helmet = getItemStackFromString(materialName, "icons.player-helmet.material");
+            }
+            armorSet.put("helmet", helmet);
+
+            ItemStack chestplate = inventory.getChestplate();
+            if (chestplate == null) {
+                String materialName = plugin.getConfig().getString("icons.player-chestplate.material");
+                chestplate = getItemStackFromString(materialName, "icons.player-chestplate.material");
+            }
+            armorSet.put("chestplate", chestplate);
+
+            ItemStack leggings = inventory.getLeggings();
+            if (leggings == null) {
+                String materialName = plugin.getConfig().getString("icons.player-leggings.material");
+                leggings = getItemStackFromString(materialName, "icons.player-leggings.material");
+            }
+            armorSet.put("leggings", leggings);
+
+            ItemStack boots = inventory.getBoots();
+            if (boots == null) {
+                String materialName = plugin.getConfig().getString("icons.player-boots.material");
+                boots = getItemStackFromString(materialName, "icons.player-boots.material");
+            }
+            armorSet.put("boots", boots);
+        }
+    }
+
+    // ฟังก์ชั่นดึงชุดเกราะจากผู้เล่น
 
     // ฟังก์ชั่นดึงค่า slot จาก ArmorSlotMap
     public static int getArmorSlot(String part) {
@@ -298,6 +367,21 @@ public class Utils {
                 // int customModelData = plugin.getConfig().getInt(path + ".custom_model_data", 0); // ไม่ได้ใช้ตรงๆ แล้ว ถ้าเป็น Nexo
                 List<String> lore = plugin.getConfig().getStringList(path + ".lore");
                 List<String> actions = plugin.getConfig().getStringList(path + ".actions");
+                boolean isBadgeItem = plugin.getConfig().getBoolean(path + ".badge", false); // Get the badge field
+                //String badgeSlotId = plugin.getConfig().getString(path + ".badge_slot_id", key); // Use key as default slot_id
+                String badgeSlotId = null;
+                if (isBadgeItem) {
+                    // *** แก้ไขตรงนี้ให้ใช้ slot แรกที่พบใน config ***
+                    // ใช้ slot ตัวแรกที่กำหนดเป็นตัวระบุ ID
+                    if (!slots.isEmpty()) {
+                        badgeSlotId = "slot_" + slots.get(0);
+                    } else {
+                        // ถ้าไม่มี slot กำหนด แต่เป็น badge item ก็ยังควรมี ID
+                        // อาจจะใช้ key หรือแสดง error ก็ได้ ขึ้นอยู่กับว่าอยากให้เป็นยังไง
+                        // สำหรับวิธีที่ง่ายที่สุดนี้ เราจะยังคงยึดติดกับ slot
+                        isBadgeItem = false; // ปิดการทำงาน badge ถ้าไม่มี slot
+                    }
+                }
 
                 ItemStack baseItem = getItemStackFromString(materialIdentifier, path + ".material");
                 boolean isNexoItem = false;
@@ -332,7 +416,7 @@ public class Utils {
                 ItemStack item = itemBuilder.build();
 
                 for (int slot : slots) {
-                    CustomItems.put(slot, new CustomGUIItem(item, actions));
+                    CustomItems.put(slot, new CustomGUIItem(item, actions,isBadgeItem, badgeSlotId));
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning("Error loading item " + key + ": " + e.getMessage());
@@ -377,90 +461,81 @@ public class Utils {
         return headItem;
     }
 
-
     public static ItemStack setLorePlaceholder(ItemStack itemStack, Player target) {
         if (itemStack == null) {
             return null;
         }
+        ItemMeta originalMeta = itemStack.hasItemMeta() ? itemStack.getItemMeta() : null;
+        String rawName = (originalMeta != null && originalMeta.hasDisplayName()) ? originalMeta.getDisplayName() : null;
+        List<String> rawLore = (originalMeta != null && originalMeta.hasLore()) ? originalMeta.getLore() : new ArrayList<>();
 
-        dev.triumphteam.gui.builder.item.ItemBuilder itemBuilder = dev.triumphteam.gui.builder.item.ItemBuilder.from(itemStack);
-
-        List<String> rawLore;
-        if (itemStack.hasItemMeta() && itemStack.getItemMeta().hasLore()) {
-            rawLore = itemStack.getItemMeta().getLore();
-        } else {
-            rawLore = new ArrayList<>();
+        String finalDisplayName = rawName;
+        if (finalDisplayName != null) {
+            if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && target != null) {
+                finalDisplayName = PlaceholderAPI.setPlaceholders(target, finalDisplayName);
+            }
+            finalDisplayName = ColorUtils.translateColorCodes(finalDisplayName);
         }
 
-        List<Component> finalLoreComponents = new ArrayList<>();
-
+        List<String> finalLore = new ArrayList<>();
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && target != null) {
             for (String line : rawLore) {
                 String parsedLine = PlaceholderAPI.setPlaceholders(target, line);
-                finalLoreComponents.add(
-                        ColorUtils.parseWithAutoDetect(parsedLine)
-                                .decoration(TextDecoration.ITALIC, false)
-                );
+                // สำคัญ: แปลงรหัสสีแบบเก่าด้วย ColorUtils
+                finalLore.add(ColorUtils.translateColorCodes(parsedLine));
             }
         } else {
+            // ถ้า PAPI ไม่เปิดใช้งาน ก็แค่แปลงรหัสสีเท่านั้น
             for (String line : rawLore) {
-                finalLoreComponents.add(
-                        MINI_MESSAGE.deserialize(line)
-                                .decoration(TextDecoration.ITALIC, false)
-                );
+                finalLore.add(ColorUtils.translateColorCodes(line));
             }
         }
+        com.nwPlayerProfile.core.ItemBuilder customItemBuilder = new com.nwPlayerProfile.core.ItemBuilder(itemStack.clone()); // ใช้ .clone() เพื่อไม่แก้ไข ItemStack เดิมโดยตรง
 
-        // แปลงชื่อด้วย PlaceholderAPI + MiniMessage
-        String rawName = itemStack.getItemMeta().getDisplayName();
-        String parsedName = rawName;
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI") && target != null) {
-            parsedName = PlaceholderAPI.setPlaceholders(target, rawName);
+        if (finalDisplayName != null) {
+            customItemBuilder.setDisplayName(finalDisplayName);
         }
-        Component finalNameComponent = ColorUtils.parseWithAutoDetect(parsedName)
-                .decoration(TextDecoration.ITALIC, false);
-
-        itemBuilder.name(finalNameComponent).lore(finalLoreComponents);
-        return itemBuilder.build();
+        customItemBuilder.setLore(finalLore);
+        return customItemBuilder.build();
     }
 
 
-    public static dev.triumphteam.gui.builder.item.ItemBuilder setFromConfig(NwPlayerProfile plugin, String path) {
-        // ดึงค่าจาก config
+    public static ItemStack setFromConfig(NwPlayerProfile plugin, String path) {
         String materialName = plugin.getConfig().getString(path + ".material");
         String displayName = plugin.getConfig().getString(path + ".display");
         int customModelData = plugin.getConfig().getInt(path + ".custom_model_data", 0);
 
-        // ใช้ getItemStackFromString เพื่อรับ ItemStack
         ItemStack itemStack = getItemStackFromString(materialName, path + ".material");
 
-        // ตรวจสอบว่าไอเทมมาจาก Nexo หรือ ItemsAdder หรือไม่
         boolean isCustomItem = false;
         if (nexoHooks != null && nexoHooks.isNexoEnabled()) {
             ItemStack nexoItem = nexoHooks.getItemId(materialName);
-            if (nexoItem != null && nexoItem.getType() == itemStack.getType()) {
+            if (nexoItem != null) {
                 isCustomItem = true;
             }
         }
 
-        if (!isCustomItem && itemsAdderHooks != null && itemsAdderHooks.isItemsAdderHooked()) {
+        if (itemsAdderHooks != null && itemsAdderHooks.isItemsAdderHooked()) {
             ItemStack iaItem = itemsAdderHooks.getItemId(materialName);
-            if (iaItem != null && iaItem.getType() == itemStack.getType()) {
+            if (iaItem != null) {
                 isCustomItem = true;
             }
         }
 
         // สร้าง ItemBuilder จาก ItemStack ที่ได้
-        dev.triumphteam.gui.builder.item.ItemBuilder itemBuilder =
-                dev.triumphteam.gui.builder.item.ItemBuilder.from(itemStack)
-                        .name(MINI_MESSAGE.deserialize(displayName));
-
-        // ตั้งค่า custom model data ถ้ามีค่ามากกว่า 0 และไม่ใช่ไอเทมจาก Nexo/ItemsAdder
-        if (customModelData > 0 && !isCustomItem) {
-            itemBuilder.model(customModelData);
+        com.nwPlayerProfile.core.ItemBuilder itemBuilder;
+        if (isCustomItem) {
+            itemBuilder = new com.nwPlayerProfile.core.ItemBuilder(itemStack)
+                    .setDisplayName(ColorUtils.translateColorCodes(displayName))
+                    .hideAttribute();
+        } else {
+            itemBuilder = new com.nwPlayerProfile.core.ItemBuilder(itemStack)
+                    .setDisplayName(ColorUtils.translateColorCodes(displayName))
+                    .setCustomModelData(customModelData)
+                    .hideAttribute();
         }
 
-        return itemBuilder;
+        return itemBuilder.build();
     }
 
     public static synchronized void loadConfig() {
@@ -476,6 +551,8 @@ public class Utils {
         MsgOpenGuiUser = plugin.getConfig().getString("message.msg-open-gui-user");
         Permission = plugin.getConfig().getString("setting.permission");
         PermissionOpen = plugin.getConfig().getString("setting.open");
+        ActionType = plugin.getConfig().getString("setting.action", "RIGHT_CLICK").toUpperCase();
+
 
         String rowString = plugin.getConfig().getString("gui.rows");
         if (rowString != null) {
@@ -535,5 +612,48 @@ public class Utils {
         plugin.getLogger().warning("Success config: nwPlayerProfile loaded.");
     }
 
+
+    public static String getSelectedBadgeId(UUID playerUUID, String slotId) {
+        // ตรวจสอบจาก cache ก่อน
+        if (selectedPlayerBadges.containsKey(playerUUID)) {
+            return selectedPlayerBadges.get(playerUUID).get(slotId);
+        }
+
+        // ถ้าไม่มีใน cache, โหลดจาก DB โดยใช้ getAllSelectedBadges()
+        // DatabaseManager no longer has getBadgeData(UUID), use getAllSelectedBadges()
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        Map<String, String> playerBadges = plugin.getDatabaseManager().getAllSelectedBadges(playerUUID);
+
+        if (playerBadges != null) {
+            selectedPlayerBadges.put(playerUUID, playerBadges); // Cache the entire map for this player
+            return playerBadges.get(slotId); // Get the specific badge for the slotId
+        }
+        return null; // ไม่มีข้อมูลสำหรับผู้เล่นนี้หรือ slot นี้
+    }
+
+    // แก้ไขเมธอด setSelectedBadgeId ให้รับ slotId
+    public static void setSelectedBadgeId(UUID playerUUID, String slotId, String badgeId) {
+        Map<String, String> playerBadges = selectedPlayerBadges.getOrDefault(playerUUID, new HashMap<>());
+        playerBadges.put(slotId, badgeId);
+        selectedPlayerBadges.put(playerUUID, playerBadges); // Update cache
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        plugin.getDatabaseManager().saveSelectedBadge(playerUUID, slotId, badgeId); // ใช้ saveSelectedBadge ใหม่
+    }
+
+    // แก้ไขเมธอด removeSelectedBadge ให้รับ slotId
+    public static void removeSelectedBadge(UUID playerUUID, String slotId) {
+        if (selectedPlayerBadges.containsKey(playerUUID)) {
+            selectedPlayerBadges.get(playerUUID).remove(slotId); // Remove from cache
+        }
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        plugin.getDatabaseManager().deleteSelectedBadge(playerUUID, slotId); // ใช้ deleteSelectedBadge ใหม่
+    }
+
+    // เพิ่มเมธอดสำหรับลบ Badge ทั้งหมดของ Player (ถ้าจำเป็น)
+    public static void removeAllBadges(UUID playerUUID) {
+        selectedPlayerBadges.remove(playerUUID);
+        NwPlayerProfile plugin = NwPlayerProfile.getPlugin(NwPlayerProfile.class);
+        plugin.getDatabaseManager().deleteAllBadges(playerUUID);
+    }
 
 }

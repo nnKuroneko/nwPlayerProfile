@@ -8,6 +8,8 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version.nwPlayerProfile.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version_test_1.21.7.nwPlayerProfile.main.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version_test_1.21.7.nwPlayerProfile.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version_test_1.21.7.nwPlayerProfile.test.iml" filepath="$PROJECT_DIR$/.idea/modules/nwPlayerProfile_Free_version_test_1.21.7.nwPlayerProfile.test.iml" />
     </modules>
   </component>
 </project>

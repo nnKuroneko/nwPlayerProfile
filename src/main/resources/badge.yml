@@ -1,0 +1,55 @@
+badge:
+  gui:
+    name: "Title Badge"
+    rows: 6
+    page-size: 45 # Add this to control how many badge items per page
+    no-fill:
+      display: '<white/>'
+      material: PAPER
+      custom_model_data: 1173
+    previous-page-item:
+      material: ARROW
+      name: "<green>Previous Page</green>"
+      slot: 39 # Example slot, adjust as needed
+    current-page-item:
+      material: PAPER
+      name: "<yellow>Page <current>/<total></yellow>"
+      slot: 40 # Example slot, adjust as needed
+      action: close #close,back or command give %player% diamond 50
+    next-page-item:
+      material: ARROW
+      name: "<green>Next Page</green>"
+      slot: 41 # Example slot, adjust as needed
+    messages: # เพิ่มส่วนนี้เข้ามา
+      currently-selected: "<green><bold>CURRENTLY SELECTED</bold></green>"
+      click-to-deselect: "<red>Click to deselect</red>"
+      click-to-select: "<yellow>Click to select</yellow>"
+      right-click-to-remove: "<red>Right-Click to remove badge</red>"
+      badge-selected: "<green>You have selected the '<badge_name>' badge.</green>" # <badge_name> will be replaced
+      badge-deselected: "<green>You have deselected the badge.</green>"
+  list:
+    beginner:
+      permission: newworld.beginner.badge
+      display-material: ARROW # Changed to ARROW for consistency, original was 'arrow'
+      display-name: "<gold>Beginner Badge</gold>"
+      display-custom_model_data: 123
+      display-lore:
+        - "<gray>This is a badge for</gray>"
+        - "<gray>new players.</gray>"
+    newbie:
+      permission: newworld.beginner.newbie
+      display-material: STICK # Changed to STICK for example
+      display-name: "<aqua>Newbie Badge</aqua>"
+      display-custom_model_data: 456
+      display-lore:
+        - "<gray>A badge for the</gray>"
+        - "<gray>absolute newbies!</gray>"
+    pro_player:
+      permission: newworld.pro.badge
+      display-material: NETHER_STAR
+      display-name: "<light_purple>Pro Player Badge</light_purple>"
+      display-custom_model_data: 789
+      display-lore:
+        - "<gray>Awarded to seasoned</gray>"
+        - "<gray>veterans of the game.</gray>"
+    # Add more badges here

@@ -31,11 +31,19 @@ groups:
   member: <glyph:member>
   adventure: '%nexo_adventure_tag_playerprofile%'
 
-
 setting:
   rightplayer: true
   permission: newworld.playerprofile.reload
   open: newworld.playerprofile.open
+  action: "RIGHT_CLICK" # example: RIGHT_CLICK, SHIFT_RIGHT_CLICK
+
+database:
+  enabled: true
+  host: localhost
+  port: 3306
+  name: nw_player_profile
+  username: root
+  password: yourpassword
 
 icons:
   #HMCCosmetic DisplayItem

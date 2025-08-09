@@ -10,6 +10,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginEnableEvent;
 
+import java.util.logging.Logger;
+
 public class ItemsAdderHooks implements Listener { // ต้อง implements Listener
     private final NwPlayerProfile plugin;
     private Plugin itemsAdderPlugin;
@@ -17,10 +19,18 @@ public class ItemsAdderHooks implements Listener { // ต้อง implements Li
 
     public ItemsAdderHooks(NwPlayerProfile plugin) {
         this.plugin = plugin;
-        // ลงทะเบียน Listener ทันที
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        initialize();
+
+        // ตรวจสอบอีกครั้งทันที ว่า ItemsAdder ถูก enable แล้วหรือยัง
+        Plugin itemsAdderPlugin = Bukkit.getPluginManager().getPlugin("ItemsAdder");
+        if (itemsAdderPlugin != null && itemsAdderPlugin.isEnabled()) {
+            plugin.getLogger().info("[ItemsAdderHook] ItemsAdder already enabled. Trying to hook directly...");
+            tryEnableItemsAdderHook();
+        } else {
+            plugin.getLogger().info("[ItemsAdderHook] ItemsAdder not enabled yet. Will wait for PluginEnableEvent.");
+        }
     }
+
 
     public void initialize() {
         itemsAdderPlugin = Bukkit.getPluginManager().getPlugin("ItemsAdder");
@@ -43,31 +53,37 @@ public class ItemsAdderHooks implements Listener { // ต้อง implements Li
     }
 
     private void tryEnableItemsAdderHook() {
-        if (itemsAdderApiLoaded) {
-            return; // ป้องกันการ enable ซ้ำ
-        }
+        if (itemsAdderApiLoaded) return;
         try {
-            // ตรวจสอบว่า CustomStack class พร้อมใช้งานหรือไม่
+            plugin.getLogger().info("[ItemsAdderHook] Trying to hook into ItemsAdder...");
             Class.forName("dev.lone.itemsadder.api.CustomStack");
             itemsAdderApiLoaded = true;
+            plugin.getLogger().info("[ItemsAdderHook] ItemsAdder hooked successfully!");
+
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                Utils.loadConfig(); // โหลด config อีกครั้ง ถ้ามีส่วนที่ต้องพึ่งพา ItemsAdder
-                Utils.loadCustomItems(); // โหลด CustomItems ที่พึ่งพา ItemsAdder
+                Utils.loadConfig();
+                Utils.loadCustomItems();
             }, 1L);
-        } catch (ClassNotFoundException e) {
-            itemsAdderApiLoaded = false;
-        } catch (NoClassDefFoundError e) {
-            itemsAdderApiLoaded = false;
         } catch (Exception e) {
+            plugin.getLogger().warning("[ItemsAdderHook] Failed to hook: " + e.getMessage());
             itemsAdderApiLoaded = false;
         }
     }
 
 
     public boolean isItemsAdderHooked() {
-        // ตรวจสอบว่า ItemsAdder Plugin ถูกโหลดและ API พร้อมใช้งาน
-        return itemsAdderApiLoaded && itemsAdderPlugin != null && itemsAdderPlugin.isEnabled();
+        Logger logger = Bukkit.getLogger();
+        try {
+            boolean result = itemsAdderApiLoaded;
+            return result;
+        } catch (Exception e) {
+            logger.warning("[nwPlayerProfile] [Debug] Exception occurred in isItemsAdderHooked: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
+
+
 
     public String getStatus() {
         if (itemsAdderPlugin == null) {
@@ -86,7 +102,6 @@ public class ItemsAdderHooks implements Listener { // ต้อง implements Li
         if (!isItemsAdderHooked()) {
             return null;
         }
-
         try {
             CustomStack customStack = CustomStack.getInstance(name);
             if (customStack == null) {
@@ -99,7 +114,11 @@ public class ItemsAdderHooks implements Listener { // ต้อง implements Li
             }
             return item.clone();
         } catch (Exception e) {
+            Bukkit.getLogger().severe("[ItemsAdderHook] Exception while getting item: " + name);
+            e.printStackTrace();
             return null;
         }
     }
+
+
 }

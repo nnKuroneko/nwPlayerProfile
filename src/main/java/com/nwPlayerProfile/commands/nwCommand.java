@@ -47,9 +47,11 @@ public class nwCommand implements CommandExecutor {
                         if (sender instanceof Player) {
                             Player player = (Player) sender;
                             Utils.loadConfig();
+                            Utils.badgeManager.loadBadgeConfig();
                             ColorUtils.sendMessage(player, Utils.MsgReload);
                         } else {
                             Utils.loadConfig();
+                            Utils.badgeManager.loadBadgeConfig();
                             sender.sendMessage(ColorUtils.translateColorCodes("<green>Config reloaded!"));
                         }
                         return true;

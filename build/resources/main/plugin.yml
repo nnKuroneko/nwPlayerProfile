@@ -1,5 +1,5 @@
 name: nwPlayerProfile
-version: '1.4.2-FREE'
+version: '1.4.6-FREE'
 main: com.nwPlayerProfile.NwPlayerProfile
 api-version: '1.21'
 load: STARTUP
@@ -7,11 +7,11 @@ description: nwPlayerProfile
 author: Discord NN#7999
 depend: [ HMCCosmetics ]
 softdepend:
+  - Nexo
+  - ItemsAdder
   - luckPerms
   - Placeholders
   - Citizens
-  - Nexo
-  - ItemsAdder
 commands:
   nwPlayerProfile:
     description: Base command for NwPlayerProfile.

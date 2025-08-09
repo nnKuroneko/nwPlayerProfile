@@ -3,6 +3,9 @@ package com.nwPlayerProfile;
 import com.nwPlayerProfile.commands.nwCommand;
 import com.nwPlayerProfile.commands.nwTabComplate;
 import com.nwPlayerProfile.core.Utils;
+import com.nwPlayerProfile.database.DatabaseManager;
+import com.nwPlayerProfile.database.MySQL;
+import com.nwPlayerProfile.database.SQLite;
 import com.nwPlayerProfile.hooks.ItemsAdderHooks;
 import com.nwPlayerProfile.metrics.BstatsManager;
 import com.nwPlayerProfile.hooks.NexoHooks;
@@ -21,6 +24,7 @@ public final class NwPlayerProfile extends JavaPlugin {
     private BstatsManager bstats; // ไม่ได้ใช้ในตัวอย่างนี้ แต่คงไว้
     private NexoHooks hook;
     private ItemsAdderHooks iahook;
+    private DatabaseManager databaseManager;
 
     @Override
     public void onEnable() {
@@ -36,9 +40,17 @@ public final class NwPlayerProfile extends JavaPlugin {
         // ItemsAdderHooks จะลงทะเบียนตัวเองเป็น Listener ใน Constructor
         this.iahook = new ItemsAdderHooks(this);
         this.hook = new NexoHooks(this);
+        this.bstats = new BstatsManager(this);
+        if (getConfig().getBoolean("database.enabled", false)) {
+            databaseManager = new MySQL(this);
+        } else {
+            databaseManager = new SQLite(this);
+        }
+        this.databaseManager.load(); // Load the database
 
         Utils.itemsAdderHooks = this.iahook;
         Utils.nexoHooks = this.hook;
+
 
         // แสดงสถานะ hook อย่างละเอียด
         logHookStatus(); // จะแสดงสถานะเริ่มต้น, ItemsAdder อาจยังไม่พร้อม
@@ -86,6 +98,9 @@ public final class NwPlayerProfile extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (databaseManager != null) {
+            databaseManager.close(); // Close the database connection
+        }
         logger.info("nwPlayerProfile Plugin Disabled");
     }
 
@@ -113,6 +128,14 @@ public final class NwPlayerProfile extends JavaPlugin {
 
     public NexoHooks getNEXOHOOK() {
         return hook;
+    }
+
+    public profile getProfileManager() {
+        return playerProfile;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
 }

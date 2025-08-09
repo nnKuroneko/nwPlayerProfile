@@ -9,7 +9,7 @@ shadowJar {
 }
 
 group = 'com'
-version = '1.4.2-FREE'
+version = '1.4.6-FREE'
 
 repositories {
     mavenCentral()
@@ -20,6 +20,10 @@ repositories {
     maven {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
+    }
+
+    maven {
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
     }
 
     maven {
@@ -62,6 +66,11 @@ repositories {
     maven {
         url = "https://repo.nexomc.com/releases"
     }
+//
+    maven {
+        name = "papermc"
+        url  = uri("https://repo.papermc.io/repository/maven-public/")
+    }
 }
 
 //25933 Bstats
@@ -88,6 +97,7 @@ dependencies {
         exclude group: '*', module: '*'
     }
     compileOnly 'me.clip:placeholderapi:2.11.6'
+    compileOnly "com.velocitypowered:velocity-api:3.3.0-SNAPSHOT"
 
 }
 
